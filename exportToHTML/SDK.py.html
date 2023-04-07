@@ -1,0 +1,158 @@
+<html>
+<head>
+<title>SDK.py</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.s0 { color: #cc7832;}
+.s1 { color: #a9b7c6;}
+.s2 { color: #629755; font-style: italic;}
+.s3 { color: #808080;}
+.s4 { color: #6897bb;}
+.s5 { color: #6a8759;}
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+</style>
+</head>
+<body bgcolor="#2b2b2b">
+<table CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<tr><td><center>
+<font face="Arial, Helvetica" color="#000000">
+SDK.py</font>
+</center></td></tr></table>
+<pre><a name="l1"><span class="ln">1    </span></a><span class="s0">import </span><span class="s1">cv2</span>
+<a name="l2"><span class="ln">2    </span></a><span class="s0">from </span><span class="s1">math </span><span class="s0">import </span><span class="s1">*</span>
+<a name="l3"><span class="ln">3    </span></a><span class="s0">import </span><span class="s1">traceback</span>
+<a name="l4"><span class="ln">4    </span></a><span class="s0">import </span><span class="s1">numpy </span><span class="s0">as </span><span class="s1">np</span>
+<a name="l5"><span class="ln">5    </span></a>
+<a name="l6"><span class="ln">6    </span></a>
+<a name="l7"><span class="ln">7    </span></a>
+<a name="l8"><span class="ln">8    </span></a>
+<a name="l9"><span class="ln">9    </span></a>
+<a name="l10"><span class="ln">10   </span></a>
+<a name="l11"><span class="ln">11   </span></a>
+<a name="l12"><span class="ln">12   </span></a>
+<a name="l13"><span class="ln">13   </span></a><span class="s0">def </span><span class="s1">define_chess(chess_board_x_num</span><span class="s0">,</span><span class="s1">chess_board_y_num</span><span class="s0">,</span><span class="s1">square_size):</span>
+<a name="l14"><span class="ln">14   </span></a>    <span class="s2">''' 
+<a name="l15"><span class="ln">15   </span></a>        :param chess_board_x_num: 棋盤格x方向格子數 
+<a name="l16"><span class="ln">16   </span></a>        :param chess_board_y_num: 棋盤格y方向格子數 
+<a name="l17"><span class="ln">17   </span></a>        :param square_size: 單位棋盤格長度,cm 
+<a name="l18"><span class="ln">18   </span></a>        :return: 棋盤格世界座標，投影坐標系 
+<a name="l19"><span class="ln">19   </span></a>    '''</span>
+<a name="l20"><span class="ln">20   </span></a>    <span class="s3">#定義棋盤格世界座標</span>
+<a name="l21"><span class="ln">21   </span></a>    <span class="s1">objp = np.zeros((chess_board_x_num*chess_board_y_num</span><span class="s0">,</span><span class="s4">3</span><span class="s1">)</span><span class="s0">, </span><span class="s1">np.float32)</span>
+<a name="l22"><span class="ln">22   </span></a>    <span class="s1">objp[:</span><span class="s0">,</span><span class="s1">:</span><span class="s4">2</span><span class="s1">] = np.mgrid[</span><span class="s4">0</span><span class="s1">:chess_board_x_num</span><span class="s0">,</span><span class="s4">0</span><span class="s1">:chess_board_y_num].T.reshape(-</span><span class="s4">1</span><span class="s0">,</span><span class="s4">2</span><span class="s1">)*square_size</span>
+<a name="l23"><span class="ln">23   </span></a>
+<a name="l24"><span class="ln">24   </span></a>    <span class="s3">#繪製出棋盤格投影座標-長度為3格，Z軸設定為-3即出紙面 為-Z</span>
+<a name="l25"><span class="ln">25   </span></a>    <span class="s1">axis = np.float32([[</span><span class="s4">3</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">,</span><span class="s4">3</span><span class="s0">,</span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s1">-</span><span class="s4">3</span><span class="s1">]]).reshape(-</span><span class="s4">1</span><span class="s0">,</span><span class="s4">3</span><span class="s1">)*square_size</span>
+<a name="l26"><span class="ln">26   </span></a>    <span class="s0">return </span><span class="s1">objp</span><span class="s0">,</span><span class="s1">axis</span>
+<a name="l27"><span class="ln">27   </span></a>
+<a name="l28"><span class="ln">28   </span></a>
+<a name="l29"><span class="ln">29   </span></a><span class="s3">#畫出投影坐標系</span>
+<a name="l30"><span class="ln">30   </span></a><span class="s0">def </span><span class="s1">draw(img</span><span class="s0">, </span><span class="s1">corners</span><span class="s0">, </span><span class="s1">imgpts</span><span class="s0">,</span><span class="s1">tvecs):</span>
+<a name="l31"><span class="ln">31   </span></a>    <span class="s2">''' 
+<a name="l32"><span class="ln">32   </span></a>        :param img: 圖片 
+<a name="l33"><span class="ln">33   </span></a>        :param corners: 棋盤格上的每個角點 
+<a name="l34"><span class="ln">34   </span></a>        :param imgpts: projectPoints求得的投影座標 
+<a name="l35"><span class="ln">35   </span></a>        :param tvecs: solvepnp求得的位移向量 
+<a name="l36"><span class="ln">36   </span></a>        :return: img : 畫上投影座標後的圖片 
+<a name="l37"><span class="ln">37   </span></a>    '''</span>
+<a name="l38"><span class="ln">38   </span></a>    <span class="s1">corner = tuple(map(int</span><span class="s0">, </span><span class="s1">corners[</span><span class="s4">0</span><span class="s1">].ravel()))</span>
+<a name="l39"><span class="ln">39   </span></a>    <span class="s1">img = cv2.line(img</span><span class="s0">, </span><span class="s1">corner</span><span class="s0">, </span><span class="s1">tuple(map(int</span><span class="s0">,</span><span class="s1">imgpts[</span><span class="s4">0</span><span class="s1">].ravel()))</span><span class="s0">, </span><span class="s1">(</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s4">255</span><span class="s1">)</span><span class="s0">, </span><span class="s4">5</span><span class="s1">)</span><span class="s3">#X</span>
+<a name="l40"><span class="ln">40   </span></a>    <span class="s1">img = cv2.line(img</span><span class="s0">, </span><span class="s1">corner</span><span class="s0">, </span><span class="s1">tuple(map(int</span><span class="s0">,</span><span class="s1">imgpts[</span><span class="s4">1</span><span class="s1">].ravel()))</span><span class="s0">, </span><span class="s1">(</span><span class="s4">0</span><span class="s0">,</span><span class="s4">255</span><span class="s0">,</span><span class="s4">0</span><span class="s1">)</span><span class="s0">, </span><span class="s4">5</span><span class="s1">)</span><span class="s3">#Y</span>
+<a name="l41"><span class="ln">41   </span></a>    <span class="s1">img = cv2.line(img</span><span class="s0">, </span><span class="s1">corner</span><span class="s0">, </span><span class="s1">tuple(map(int</span><span class="s0">,</span><span class="s1">imgpts[</span><span class="s4">2</span><span class="s1">].ravel()))</span><span class="s0">, </span><span class="s1">(</span><span class="s4">255</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s1">)</span><span class="s0">, </span><span class="s4">5</span><span class="s1">)</span><span class="s3">#Z</span>
+<a name="l42"><span class="ln">42   </span></a>    <span class="s1">x</span><span class="s0">, </span><span class="s1">y = corner</span>
+<a name="l43"><span class="ln">43   </span></a>    <span class="s1">cv2.putText(img</span><span class="s0">, </span><span class="s5">f&quot;(X:</span><span class="s0">{</span><span class="s1">round(tvecs[</span><span class="s4">0</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s4">2</span><span class="s1">)*</span><span class="s4">10</span><span class="s0">}</span><span class="s5">mm,Y:</span><span class="s0">{</span><span class="s1">round(tvecs[</span><span class="s4">1</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s4">2</span><span class="s1">)*</span><span class="s4">10</span><span class="s0">}</span><span class="s5">mm,Z:</span><span class="s0">{</span><span class="s1">round(tvecs[</span><span class="s4">2</span><span class="s1">][</span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s4">2</span><span class="s1">)*</span><span class="s4">10</span><span class="s0">}</span><span class="s5">mm)&quot;</span><span class="s0">,</span>
+<a name="l44"><span class="ln">44   </span></a>                <span class="s1">(x</span><span class="s0">,</span><span class="s1">y-</span><span class="s4">45</span><span class="s1">)</span><span class="s0">, </span><span class="s1">cv2.FONT_HERSHEY_SIMPLEX</span><span class="s0">,</span>
+<a name="l45"><span class="ln">45   </span></a>                <span class="s4">1</span><span class="s0">, </span><span class="s1">(</span><span class="s4">55</span><span class="s0">, </span><span class="s4">200</span><span class="s0">, </span><span class="s4">255</span><span class="s1">)</span><span class="s0">, </span><span class="s4">2</span><span class="s0">, </span><span class="s1">cv2.LINE_AA)</span>
+<a name="l46"><span class="ln">46   </span></a>    <span class="s0">return </span><span class="s1">img</span>
+<a name="l47"><span class="ln">47   </span></a>
+<a name="l48"><span class="ln">48   </span></a>
+<a name="l49"><span class="ln">49   </span></a><span class="s3">#根據歐拉角計算旋轉矩陣</span>
+<a name="l50"><span class="ln">50   </span></a><span class="s0">def </span><span class="s1">myRPY2R_robot(x</span><span class="s0">, </span><span class="s1">y</span><span class="s0">, </span><span class="s1">z):</span>
+<a name="l51"><span class="ln">51   </span></a>    <span class="s2">''' 
+<a name="l52"><span class="ln">52   </span></a>        :param x: 手臂歐拉角 rx (弧度) 
+<a name="l53"><span class="ln">53   </span></a>        :param y: 手臂歐拉角 ry (弧度) 
+<a name="l54"><span class="ln">54   </span></a>        :param z: 手臂歐拉角 rz (弧度) 
+<a name="l55"><span class="ln">55   </span></a>        :return: R : 手臂末端相對於手臂基座的旋轉矩陣 
+<a name="l56"><span class="ln">56   </span></a>    '''</span>
+<a name="l57"><span class="ln">57   </span></a>    <span class="s1">Rx = np.array([[</span><span class="s4">1</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">, </span><span class="s1">cos(x)</span><span class="s0">, </span><span class="s1">-sin(x)]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">, </span><span class="s1">sin(x)</span><span class="s0">, </span><span class="s1">cos(x)]])</span>
+<a name="l58"><span class="ln">58   </span></a>    <span class="s1">Ry = np.array([[cos(y)</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s1">sin(y)]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">, </span><span class="s4">1</span><span class="s0">, </span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[-sin(y)</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s1">cos(y)]])</span>
+<a name="l59"><span class="ln">59   </span></a>    <span class="s1">Rz = np.array([[cos(z)</span><span class="s0">, </span><span class="s1">-sin(z)</span><span class="s0">, </span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[sin(z)</span><span class="s0">, </span><span class="s1">cos(z)</span><span class="s0">, </span><span class="s4">0</span><span class="s1">]</span><span class="s0">, </span><span class="s1">[</span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s4">1</span><span class="s1">]])</span>
+<a name="l60"><span class="ln">60   </span></a>    <span class="s1">R = Rz @ Ry @ Rx</span>
+<a name="l61"><span class="ln">61   </span></a>    <span class="s0">return </span><span class="s1">R</span>
+<a name="l62"><span class="ln">62   </span></a>
+<a name="l63"><span class="ln">63   </span></a><span class="s3">#根據手臂位置姿態計算變換矩陣</span>
+<a name="l64"><span class="ln">64   </span></a><span class="s0">def </span><span class="s1">pose_robot(x</span><span class="s0">, </span><span class="s1">y</span><span class="s0">, </span><span class="s1">z</span><span class="s0">, </span><span class="s1">Tx</span><span class="s0">, </span><span class="s1">Ty</span><span class="s0">, </span><span class="s1">Tz):</span>
+<a name="l65"><span class="ln">65   </span></a>    <span class="s2">''' 
+<a name="l66"><span class="ln">66   </span></a>        :param x: 手臂歐拉角 rx (弧度) 
+<a name="l67"><span class="ln">67   </span></a>        :param y: 手臂歐拉角 ry (弧度) 
+<a name="l68"><span class="ln">68   </span></a>        :param z: 手臂歐拉角 rz (弧度) 
+<a name="l69"><span class="ln">69   </span></a>        :param Tx: 手臂X座標 
+<a name="l70"><span class="ln">70   </span></a>        :param Ty: 手臂Y座標 
+<a name="l71"><span class="ln">71   </span></a>        :param Tz: 手臂Z座標 
+<a name="l72"><span class="ln">72   </span></a>        :return: RT1 : 手臂末端相對於手臂基座的變換矩陣 
+<a name="l73"><span class="ln">73   </span></a>    '''</span>
+<a name="l74"><span class="ln">74   </span></a>    <span class="s1">thetaX = x / </span><span class="s4">180 </span><span class="s1">* pi </span><span class="s3">#將角度轉弧度</span>
+<a name="l75"><span class="ln">75   </span></a>    <span class="s1">thetaY = y / </span><span class="s4">180 </span><span class="s1">* pi</span>
+<a name="l76"><span class="ln">76   </span></a>    <span class="s1">thetaZ = z / </span><span class="s4">180 </span><span class="s1">* pi</span>
+<a name="l77"><span class="ln">77   </span></a>    <span class="s1">R = myRPY2R_robot(thetaX</span><span class="s0">, </span><span class="s1">thetaY</span><span class="s0">, </span><span class="s1">thetaZ)</span><span class="s3">#計算旋轉矩陣</span>
+<a name="l78"><span class="ln">78   </span></a>    <span class="s1">t = np.array([[Tx]</span><span class="s0">, </span><span class="s1">[Ty]</span><span class="s0">, </span><span class="s1">[Tz]])</span><span class="s3">#手臂座標 = 末端位移向量</span>
+<a name="l79"><span class="ln">79   </span></a>    <span class="s1">RT1 = np.column_stack([R</span><span class="s0">, </span><span class="s1">t])  </span><span class="s3"># 列合并</span>
+<a name="l80"><span class="ln">80   </span></a>    <span class="s1">RT1 = np.row_stack((RT1</span><span class="s0">, </span><span class="s1">np.array([</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s4">0</span><span class="s0">,</span><span class="s4">1</span><span class="s1">])))</span>
+<a name="l81"><span class="ln">81   </span></a>    <span class="s0">return </span><span class="s1">RT1</span>
+<a name="l82"><span class="ln">82   </span></a>
+<a name="l83"><span class="ln">83   </span></a><span class="s3">#取得相機外參: 標定板座標原點相對於相機原點的變換矩陣</span>
+<a name="l84"><span class="ln">84   </span></a><span class="s0">def </span><span class="s1">get_RT_from_chessboard(img_path</span><span class="s0">,</span><span class="s1">chess_board_x_num</span><span class="s0">,</span><span class="s1">chess_board_y_num</span><span class="s0">,</span><span class="s1">K</span><span class="s0">,</span><span class="s1">check</span><span class="s0">,</span><span class="s1">objp</span><span class="s0">,</span><span class="s1">axis</span><span class="s0">,</span><span class="s1">dist</span><span class="s0">,</span><span class="s1">Cam_point</span><span class="s0">,</span><span class="s1">mtx):</span>
+<a name="l85"><span class="ln">85   </span></a>    <span class="s2">''' 
+<a name="l86"><span class="ln">86   </span></a>    :param img_path: 讀取圖片 
+<a name="l87"><span class="ln">87   </span></a>    :param chess_board_x_num: 棋盤格x方向格子數 
+<a name="l88"><span class="ln">88   </span></a>    :param chess_board_y_num: 棋盤格y方向格子數 
+<a name="l89"><span class="ln">89   </span></a>    :param K: 相機內參 
+<a name="l90"><span class="ln">90   </span></a>    :param check: 是否停下查看圖片,0 = 不停下快速讀完,1 = 停下查看投影圖片 
+<a name="l91"><span class="ln">91   </span></a>    :param objp: 棋盤格世界座標 
+<a name="l92"><span class="ln">92   </span></a>    :param axis: 投影座標 
+<a name="l93"><span class="ln">93   </span></a>    :param dist: 畸變系數 
+<a name="l94"><span class="ln">94   </span></a>    :param Cam_point: 存放每張棋盤個原點solvepnp後得到的位移向量 
+<a name="l95"><span class="ln">95   </span></a>    :param mtx: 相機內參 
+<a name="l96"><span class="ln">96   </span></a> 
+<a name="l97"><span class="ln">97   </span></a>    :return: RT 相機外參 
+<a name="l98"><span class="ln">98   </span></a>    '''</span>
+<a name="l99"><span class="ln">99   </span></a>
+<a name="l100"><span class="ln">100  </span></a>    <span class="s1">img = cv2.imread(img_path)</span>
+<a name="l101"><span class="ln">101  </span></a>    <span class="s1">gray = cv2.cvtColor(img</span><span class="s0">, </span><span class="s1">cv2.COLOR_BGR2GRAY)</span>
+<a name="l102"><span class="ln">102  </span></a>    <span class="s1">ret</span><span class="s0">, </span><span class="s1">corners = cv2.findChessboardCorners(gray</span><span class="s0">, </span><span class="s1">(chess_board_x_num</span><span class="s0">, </span><span class="s1">chess_board_y_num)</span><span class="s0">, None</span><span class="s1">)</span>
+<a name="l103"><span class="ln">103  </span></a>    <span class="s1">criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER</span><span class="s0">, </span><span class="s4">30</span><span class="s0">, </span><span class="s4">0.001</span><span class="s1">)</span>
+<a name="l104"><span class="ln">104  </span></a>    <span class="s0">if </span><span class="s1">ret == </span><span class="s0">True</span><span class="s1">:</span>
+<a name="l105"><span class="ln">105  </span></a>        <span class="s0">try</span><span class="s1">:</span>
+<a name="l106"><span class="ln">106  </span></a>            <span class="s1">corners2 = cv2.cornerSubPix(gray</span><span class="s0">, </span><span class="s1">corners</span><span class="s0">, </span><span class="s1">(</span><span class="s4">11</span><span class="s0">, </span><span class="s4">11</span><span class="s1">)</span><span class="s0">, </span><span class="s1">(-</span><span class="s4">1</span><span class="s0">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span><span class="s0">, </span><span class="s1">criteria)</span>
+<a name="l107"><span class="ln">107  </span></a>
+<a name="l108"><span class="ln">108  </span></a>            <span class="s3"># Find the rotation and translation vectors.</span>
+<a name="l109"><span class="ln">109  </span></a>            <span class="s1">ret</span><span class="s0">, </span><span class="s1">rvecs</span><span class="s0">, </span><span class="s1">tvecs = cv2.solvePnP(objp</span><span class="s0">, </span><span class="s1">corners2</span><span class="s0">, </span><span class="s1">K</span><span class="s0">, </span><span class="s1">dist)</span>
+<a name="l110"><span class="ln">110  </span></a>            <span class="s3">#平移向量 = 標定板原點相對於相機座標系的座標值</span>
+<a name="l111"><span class="ln">111  </span></a>            <span class="s3"># print(&quot;旋轉向量 : &quot;, rvecs)</span>
+<a name="l112"><span class="ln">112  </span></a>            <span class="s3"># print(&quot;平移向量 : &quot;, tvecs)</span>
+<a name="l113"><span class="ln">113  </span></a>            <span class="s3"># print(&quot;旋轉角度 : &quot;,np.degrees(rvecs))</span>
+<a name="l114"><span class="ln">114  </span></a>            <span class="s1">Cam_point.append(tvecs)</span><span class="s3">#獲取每張圖的棋盤格原點</span>
+<a name="l115"><span class="ln">115  </span></a>            <span class="s3"># project 3D points to image plane</span>
+<a name="l116"><span class="ln">116  </span></a>            <span class="s1">imgpts</span><span class="s0">, </span><span class="s1">jac = cv2.projectPoints(axis</span><span class="s0">, </span><span class="s1">rvecs</span><span class="s0">, </span><span class="s1">tvecs</span><span class="s0">, </span><span class="s1">mtx</span><span class="s0">, </span><span class="s1">dist)</span>
+<a name="l117"><span class="ln">117  </span></a>
+<a name="l118"><span class="ln">118  </span></a>            <span class="s1">img = draw(img</span><span class="s0">, </span><span class="s1">corners2</span><span class="s0">, </span><span class="s1">imgpts</span><span class="s0">,</span><span class="s1">tvecs)</span>
+<a name="l119"><span class="ln">119  </span></a>            <span class="s1">img = cv2.circle(img</span><span class="s0">, </span><span class="s1">(img.shape[</span><span class="s4">1</span><span class="s1">] // </span><span class="s4">2</span><span class="s0">, </span><span class="s1">img.shape[</span><span class="s4">0</span><span class="s1">] // </span><span class="s4">2</span><span class="s1">)</span><span class="s0">, </span><span class="s4">2</span><span class="s0">, </span><span class="s1">(</span><span class="s4">255</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s1">)</span><span class="s0">, </span><span class="s1">-</span><span class="s4">1</span><span class="s1">)</span>
+<a name="l120"><span class="ln">120  </span></a>
+<a name="l121"><span class="ln">121  </span></a>        <span class="s0">except</span><span class="s1">:</span>
+<a name="l122"><span class="ln">122  </span></a>            <span class="s1">print(</span><span class="s5">&quot;wrong&quot;</span><span class="s1">)</span>
+<a name="l123"><span class="ln">123  </span></a>            <span class="s1">print(traceback.print_exc())</span>
+<a name="l124"><span class="ln">124  </span></a>
+<a name="l125"><span class="ln">125  </span></a>    <span class="s1">RT=np.column_stack(((cv2.Rodrigues(rvecs))[</span><span class="s4">0</span><span class="s1">]</span><span class="s0">,</span><span class="s1">tvecs))</span>
+<a name="l126"><span class="ln">126  </span></a>    <span class="s1">RT = np.row_stack((RT</span><span class="s0">, </span><span class="s1">np.array([</span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s4">0</span><span class="s0">, </span><span class="s4">1</span><span class="s1">])))</span>
+<a name="l127"><span class="ln">127  </span></a>    <span class="s1">img = draw(img</span><span class="s0">, </span><span class="s1">corners2</span><span class="s0">, </span><span class="s1">imgpts</span><span class="s0">,</span><span class="s1">tvecs)</span>
+<a name="l128"><span class="ln">128  </span></a>    <span class="s1">cv2.imshow(</span><span class="s5">'img'</span><span class="s0">, </span><span class="s1">img)</span>
+<a name="l129"><span class="ln">129  </span></a>    <span class="s3">#check = 1 停下查看棋盤格投影座標圖片, check = 0 快速完成</span>
+<a name="l130"><span class="ln">130  </span></a>    <span class="s0">if </span><span class="s1">check:</span>
+<a name="l131"><span class="ln">131  </span></a>        <span class="s1">cv2.waitKey(</span><span class="s4">0</span><span class="s1">)</span>
+<a name="l132"><span class="ln">132  </span></a>    <span class="s0">else</span><span class="s1">:</span>
+<a name="l133"><span class="ln">133  </span></a>        <span class="s1">cv2.waitKey(</span><span class="s4">1</span><span class="s1">)</span>
+<a name="l134"><span class="ln">134  </span></a>
+<a name="l135"><span class="ln">135  </span></a>    <span class="s0">return </span><span class="s1">RT</span>
+<a name="l136"><span class="ln">136  </span></a></pre>
+</body>
+</html>
